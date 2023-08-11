@@ -5,7 +5,7 @@
 CenterFace anchor-free face detection.
 
 ## Running the Sample
-Retrieve your access key from [NatML Hub](https://hub.natml.ai/profile) and add it to your Project Settings. Note that running the sample code requires an active [NatML Cloud](https://www.natml.ai/pricing) subscription:
+Retrieve your access key from [NatML Hub](https://hub.natml.ai/profile) and add it to your Project Settings:
 
 ![project settings](https://github.com/natmlx/NatDevice/raw/main/.media/key.png)
 
@@ -13,7 +13,7 @@ Retrieve your access key from [NatML Hub](https://hub.natml.ai/profile) and add 
 [See the predictor README for more details](Packages/ai.natml.vision.centerface/README.md).
 
 ## Requirements
-- Unity 2021.2+
+- Unity 2022.3+
 
 ## Supported Platforms
 - Android API level 24+

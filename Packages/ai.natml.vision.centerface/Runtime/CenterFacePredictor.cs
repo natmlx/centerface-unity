@@ -1,6 +1,6 @@
 /* 
 *   CenterFace
-*   Copyright (c) 2022 NatML Inc. All Rights Reserved.
+*   Copyright (c) 2023 NatML Inc. All Rights Reserved.
 */
 
 namespace NatML.Vision {
@@ -8,6 +8,7 @@ namespace NatML.Vision {
     using System;
     using System.Collections.Generic;
     using System.Linq;
+    using System.Threading.Tasks;
     using UnityEngine;
     using NatML.Features;
     using NatML.Internal;
@@ -22,16 +23,9 @@ namespace NatML.Vision {
 
         #region --Client API--
         /// <summary>
-        /// Create the CenterFace predictor.
+        /// CenterFace predictor tag on NatML Hub.
         /// </summary>
-        /// <param name="model">CenterFace ML model.</param>
-        /// <param name="minScore">Minimum candidate score.</param>
-        /// <param name="maxIoU">Maximum intersection-over-union score for overlap removal.</param>
-        public CenterFacePredictor (MLModel model, float minScore = 0.5f, float maxIoU = 0.5f) {
-            this.model = model as MLEdgeModel;
-            this.minScore = minScore;
-            this.maxIoU = maxIoU;
-        }
+        public const string Tag = "@natsuite/centerface";
 
         /// <summary>
         /// Detect faces in an image.
@@ -48,6 +42,11 @@ namespace NatML.Vision {
             var imageFeature = input as MLImageFeature;
             if (!imageType)
                 throw new ArgumentException(@"CenterFace predictor expects an an array or image feature", nameof(inputs));
+            // Apply normalization
+            if (imageFeature != null) {
+                (imageFeature.mean, imageFeature.std) = model.normalization;
+                imageFeature.aspectMode = model.aspectMode;
+            }
             // Predict
             var inputType = model.inputs[0] as MLImageType;
             using var inputFeature = (input as IMLEdgeFeature).Create(inputType);
@@ -85,6 +84,30 @@ namespace NatML.Vision {
             // Return
             return result;
         }
+
+        /// <summary>
+        /// Dispose the model and release resources.
+        /// </summary>
+        public void Dispose () => model.Dispose();
+
+        /// <summary>
+        /// Create the CenterFace predictor.
+        /// </summary>
+        /// <param name="minScore">Minimum candidate score.</param>
+        /// <param name="maxIoU">Maximum intersection-over-union score for overlap removal.</param>
+        /// <param name="configuration"></param>
+        /// <param name="accessKey"></param>
+        /// <returns>CenterFace predictor.</returns>
+        public static async Task<CenterFacePredictor> Create (
+            float minScore = 0.5f,
+            float maxIoU = 0.5f,
+            MLEdgeModel.Configuration configuration = null,
+            string accessKey = null
+        ) {
+            var model = await MLEdgeModel.Create(Tag, configuration, accessKey);
+            var predictor = new CenterFacePredictor(model, minScore, maxIoU);
+            return predictor;
+        }
         #endregion
 
 
@@ -93,7 +116,11 @@ namespace NatML.Vision {
         private readonly float minScore;
         private readonly float maxIoU;
 
-        void IDisposable.Dispose () { } // Not used
+        private CenterFacePredictor (MLEdgeModel model, float minScore = 0.5f, float maxIoU = 0.5f) {
+            this.model = model as MLEdgeModel;
+            this.minScore = minScore;
+            this.maxIoU = maxIoU;
+        }
         #endregion
     }
 }

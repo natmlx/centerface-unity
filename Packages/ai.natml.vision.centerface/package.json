@@ -1,11 +1,11 @@
 {
     "name": "ai.natml.vision.centerface",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "displayName": "CenterFace",
     "description": "CenterFace anchor-free face detection in Unity Engine.",
-    "unity": "2021.2",
+    "unity": "2022.3",
     "dependencies": {
-        "ai.natml.natml": "1.0.18"
+        "ai.natml.natml": "1.1.15"
     },
     "keywords": [
         "natml",
@@ -20,5 +20,5 @@
         "url": "https://github.com/natmlx"
     },
     "license": "MIT",
-    "repository": "github:natml-hub/CenterFace"
+    "repository": "github:natmlx/centerface-unity"
 }

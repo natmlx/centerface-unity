@@ -1,69 +1,45 @@
 /* 
 *   CenterFace
-*   Copyright (c) 2022 NatML Inc. All Rights Reserved.
+*   Copyright (c) 2023 NatML Inc. All Rights Reserved.
 */
 
 namespace NatML.Examples {
 
     using System.Threading.Tasks;
     using UnityEngine;
-    using NatML.Devices;
-    using NatML.Devices.Outputs;
-    using NatML.Features;
     using NatML.Vision;
+    using VideoKit;
     using Visualizers;
 
     public sealed class CenterFaceSample : MonoBehaviour {
 
+        [Header(@"Camera Manager")]
+        public VideoKitCameraManager cameraManager;
+
         [Header(@"UI")]
         public CenterFaceVisualizer visualizer;
-
-        private CameraDevice cameraDevice;
-        private TextureOutput cameraTextureOutput;
-
-        private MLModelData modelData;
-        private MLModel model;
+    
         private CenterFacePredictor predictor;
 
         async void Start () {
-            // Request camera permissions
-            var permissionStatus = await MediaDeviceQuery.RequestPermissions<CameraDevice>();
-            if (permissionStatus != PermissionStatus.Authorized) {
-                Debug.LogError(@"User did not grant camera permissions");
-                return;
-            }
-            // Get a camera device
-            var query = new MediaDeviceQuery(MediaDeviceCriteria.CameraDevice);
-            cameraDevice = query.current as CameraDevice;
-            // Start the camera preview
-            cameraTextureOutput = new TextureOutput();
-            cameraDevice.StartRunning(cameraTextureOutput);
-            // Display the camera preview
-            var cameraTexture = await cameraTextureOutput;
-            visualizer.image = cameraTexture;
-            // Create the CenterFace predictor
-            modelData = await MLModelData.FromHub("@natsuite/centerface");
-            model = modelData.Deserialize();
-            predictor = new CenterFacePredictor(model);
+            // Create the predictor
+            predictor = await CenterFacePredictor.Create();
+            // Listen for camera frames
+            cameraManager.OnCameraFrame.AddListener(OnCameraFrame);
         }
 
-        void Update () {
-            // Check that predictor has downloaded
-            if (predictor == null)
-                return;
-            // Create image feature
-            var imageFeature = new MLImageFeature(cameraTextureOutput.texture);
-            (imageFeature.mean, imageFeature.std) = modelData.normalization;
-            imageFeature.aspectMode = modelData.aspectMode;
+        void OnCameraFrame (CameraFrame frame) {
             // Predict faces
-            var faces = predictor.Predict(imageFeature);
+            var faces = predictor.Predict(frame);
             // Visualize
             visualizer.Render(faces);
         }
 
         void OnDisable () {
+            // Stop listening for frames
+            cameraManager.OnCameraFrame.RemoveListener(OnCameraFrame);
             // Dispose the model
-            model?.Dispose();
+            predictor?.Dispose();
         }
     }
 }
